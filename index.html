@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Epsilon Program • Video Showcase</title>
+  <meta name="description" content="A unique, punchy gallery for YouTube and TikTok in an Epsilon‑blue aesthetic, plus blurbs and announcements." />
+  <link rel="preconnect" href="https://www.youtube-nocookie.com"/>
+  <link rel="preconnect" href="https://www.tiktok.com"/>
+  <style>
+    :root{
+      /* Epsilon blues */
+      --eps-900:#0b2f52;/* deep */
+      --eps-700:#134b8a;/* brand */
+      --eps-500:#1e79ff;/* accent */
+      --eps-300:#70b7ff;/* light */
+      --ink:#0b1620;    /* text */
+      --ink-2:#2a3442;  /* secondary text */
+      --paper:#f7fbff;  /* base */
+      --card:#ffffffee; /* frosted card */
+      --ring:rgba(30,121,255,.25);
+      --pop:0 12px 40px -10px rgba(30,121,255,.45);
+      --pop-2:0 8px 28px -8px rgba(0,0,0,.28);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color:var(--ink); background: radial-gradient(80% 60% at 10% -10%, #e9f3ff, transparent 60%), radial-gradient(60% 50% at 110% 10%, #dff0ff, transparent 60%), var(--paper);
+      overflow-x:hidden;
+    }
+    /* floating blobs for fun */
+    .blob{position:fixed; inset:auto; border-radius:999px; filter:blur(40px); opacity:.25; mix-blend:multiply; animation: float 16s ease-in-out infinite;}
+    .blob.b1{width:320px; height:320px; left:-60px; top:-40px; background:linear-gradient(90deg,var(--eps-700),var(--eps-300));}
+    .blob.b2{width:260px; height:260px; right:-60px; top:60px; background:linear-gradient(90deg,#7cf,#aef); animation-delay: -6s}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(24px)}}
+
+    .wrap{max-width:1200px; margin:0 auto; padding:24px;}
+    header{
+      position:sticky; top:0; z-index:5;
+      backdrop-filter:saturate(1.1) blur(8px);
+      background: linear-gradient(180deg, #ffffffcc, #ffffffb0);
+      border-bottom:1px solid rgba(0,0,0,.06);
+    }
+    .hero{display:flex; align-items:center; gap:16px; padding:16px 0;}
+    .logo{
+      width:56px; height:56px; border-radius:14px; object-fit:contain; background:#fff; padding:6px;
+      box-shadow:0 6px 18px rgba(0,0,0,.08);
+      border:1px solid rgba(0,0,0,.06);
+    }
+    .title{
+      line-height:1.05; margin:0;
+      font-weight:800; font-size: clamp(1.6rem, 2.2vw + .8rem, 3rem);
+      letter-spacing:.2px;
+      background: linear-gradient(90deg, var(--eps-700), var(--eps-300));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      text-shadow: 0 1px 0 rgba(255,255,255,.5);
+    }
+    .subtitle{margin:.25rem 0 0;color:var(--ink-2); font-weight:600}
+
+    .toolbar{display:flex; gap:12px; flex-wrap:wrap; margin:14px 0 8px; align-items:center}
+    .search{
+      flex:1 1 280px; display:flex; align-items:center; gap:8px;
+      background:var(--card); border:1px solid rgba(0,0,0,.08);
+      padding:10px 12px; border-radius:14px; box-shadow: var(--pop-2);
+    }
+    .search input{border:0; outline:0; background:transparent; width:100%; font-size:16px}
+    .chipbar{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+    .chip{
+      padding:10px 14px; border-radius:999px; font-weight:700; font-size:14px; cursor:pointer; user-select:none;
+      background:#f0f6ff; color:var(--eps-700); border:1px solid #d7e7ff; box-shadow:0 2px 0 rgba(19,75,138,.12);
+    }
+    .chip.active{background:linear-gradient(90deg, var(--eps-500), var(--eps-300)); color:white; border-color:transparent; box-shadow: var(--pop)}
+    .linkbtn{ padding:10px 14px; border-radius:999px; font-weight:800; border:1px solid #cfe2ff; background:#fff; text-decoration:none; color:var(--eps-700); box-shadow:0 2px 0 rgba(19,75,138,.12);}
+    .linkbtn:hover{ box-shadow: var(--pop) }
+
+    /* Text blocks */
+    .sections{display:grid; grid-template-columns: 2fr 1fr; gap:16px; margin:18px 0 10px}
+    @media (max-width:900px){ .sections{grid-template-columns:1fr} }
+    .card-note{
+      background: var(--card); border:1px solid rgba(0,0,0,.06); border-radius: var(--radius);
+      padding:16px 18px; box-shadow: var(--pop-2);
+    }
+    .card-note h2{margin:0 0 6px; font-size:1.1rem}
+    .card-note p{margin:.4rem 0}
+
+    .grid{ display:grid; grid-template-columns: repeat(12, 1fr); gap:16px; margin:14px 0 40px; }
+    @media (max-width:1100px){.grid{grid-template-columns: repeat(8, 1fr)}}
+    @media (max-width:700px){.grid{grid-template-columns: repeat(4, 1fr)}}
+
+    .card{ grid-column: span 4; background: var(--card); border:1px solid rgba(0,0,0,.06); border-radius: var(--radius); overflow:hidden; position:relative; box-shadow: var(--pop-2); transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+    .card:hover{ transform: translateY(-4px) rotate(.2deg); box-shadow: var(--pop); border-color: var(--ring); }
+    .card.tall{ grid-column: span 4; }
+    .card.wide{ grid-column: span 8; }
+    @media (max-width:700px){ .card, .card.tall, .card.wide{ grid-column: span 4; } }
+
+    .thumb{ position:relative; aspect-ratio:16/9; background:#cfe4ff; overflow:hidden; }
+    .thumb.vertical{ aspect-ratio:9/16; }
+    .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .play{
+      position:absolute; inset:auto auto 10px 10px; display:flex; align-items:center; gap:10px;
+      background: linear-gradient(90deg, var(--eps-700), var(--eps-500)); color:white; font-weight:800;
+      padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.3); box-shadow: var(--pop);
+      text-transform:uppercase; letter-spacing:.4px; font-size:12px;
+    }
+    .play[disabled]{opacity:.6; filter:grayscale(1); cursor:not-allowed}
+    .badge{position:absolute; top:10px; left:10px; font-size:12px; font-weight:800; color:#083; background:#eafff2; border:1px solid #b6ffd0; padding:6px 10px; border-radius:999px}
+
+    .meta{ padding:12px 14px 14px; }
+    .meta h3{ margin:0 0 6px; font-size: clamp(1rem, .7vw + .7rem, 1.15rem); font-weight:900; color:#0f2544; }
+    .meta .by{ color:var(--ink-2); font-size:13px; font-weight:700 }
+    .meta .desc{ margin-top:8px; color:#2c3a52; font-size:.95rem }
+    .meta .tags{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap }
+    .meta .tag{ font-size:12px; font-weight:800; color:var(--eps-700); background:#eef5ff; border:1px solid #dbe9ff; padding:6px 10px; border-radius:999px }
+
+    dialog#player{ border:0; border-radius:20px; padding:0; width:min(1000px, 94vw); box-shadow:0 30px 100px rgba(0,0,0,.45); }
+    dialog::backdrop{ background: radial-gradient(circle at 30% 10%, rgba(30,121,255,.18), transparent 30%), rgba(2,10,20,.6); backdrop-filter: blur(2px); }
+    .frame-wrap{ position:relative; width:100%; aspect-ratio:16/9; background:#000; }
+    .frame-wrap.vertical{ aspect-ratio:9/16; }
+    .close{ position:absolute; top:10px; right:10px; z-index:3; border:0; cursor:pointer; font-weight:900; font-size:14px; padding:8px 10px; border-radius:10px; background:#ffffffee; border:1px solid rgba(0,0,0,.1); }
+    .frame{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+    footer{ color:#6b7a90; padding:28px 0 40px; text-align:center; font-weight:700 }
+    footer a{ color:var(--eps-700); text-decoration:none; border-bottom:1px dashed #b4d2ff }
+  </style>
+</head>
+<body>
+  <div class="blob b1"></div><div class="blob b2"></div>
+  <header>
+    <div class="wrap">
+      <div class="hero">
+        <img class="logo" src="assets/epsilon-program.png" alt="Epsilon Program Logo" onerror="this.src='data:image/svg+xml;utf8,\
+        <svg xmlns=\'http://www.w3.org/2000/svg\' width=\'128\' height=\'128\' viewBox=\'0 0 128 128\'>\
+          <defs><linearGradient id=\'g\' x1=\'0\' x2=\'1\'><stop stop-color=\'%23134b8a\'/><stop offset=\'1\' stop-color=\'%2370b7ff\'/></linearGradient></defs>\
+          <rect width=\'128\' height=\'128\' rx=\'20\' fill=\'url(%23g)\'/>\
+          <text x=\'50%\' y=\'54%\' font-family=\'Helvetica Neue, Arial\' font-size=\'62\' font-weight=\'800\' text-anchor=\'middle\' fill=\'white\'>E</text>\
+        </svg>'" />
+        <div>
+          <h1 class="title">Epsilon Program • Featured Clips</h1>
+          <p class="subtitle">TikTok & YouTube, but shinier. Add your blurbs below to make it yours.</p>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search" role="search">🔎 <input id="q" type="search" placeholder="Search titles, creators, or tags…" /></div>
+        <div class="chipbar" id="filters">
+          <div class="chip active" data-type="all">All</div>
+          <div class="chip" data-type="youtube">YouTube</div>
+          <div class="chip" data-type="tiktok">TikTok</div>
+          <!-- Link button appears AFTER YouTube & TikTok per request -->
+          <a class="linkbtn" href="pilots.html">✈ Meet the Pilots →</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Editable text areas -->
+    <section class="sections">
+      <article class="card-note">
+        <h2>Announcement</h2>
+        <p><!-- Write a short hype line here -->Tonight we test the new Epsilon camera rig. Stream at 7 PM PT.</p>
+        <p><!-- Optional extra line -->New TikTok batch just dropped — check the grid below!</p>
+      </article>
+      <article class="card-note">
+        <h2>About This Page</h2>
+        <p><!-- Tell visitors what this is -->Curated clips from our ops, events, and flight sessions. Epsilon blue, maximum pop.</p>
+      </article>
+    </section>
+
+    <section id="grid" class="grid" aria-live="polite"></section>
+  </main>
+
+  <dialog id="player">
+    <button class="close" onclick="closePlayer()">✕ Close</button>
+    <div id="frameWrap" class="frame-wrap"><!-- aspect class added dynamically --></div>
+  </dialog>
+
+  <footer>
+    Built with 💙 in Epsilon Blue. Drop your logo into <code>assets/epsilon-program.png</code>. — Edit the <code>VIDEOS</code> array to add IDs and descriptions.
+  </footer>
+
+  <script>
+    /* ==================================================
+       VIDEOS — placeholders (no random videos)
+       - Fill in your IDs and text; Play is disabled until an ID exists.
+       - Provide optional description and tags per video.
+    ==================================================== */
+    const VIDEOS = [
+      // YouTube examples (empty by default)
+      // { type:'youtube', id:'', title:'Your YT Title', creator:'Channel', date:'2025-09-01', desc:'Short description here', tags:['event','montage'] },
+
+      // 20 TikTok placeholders
+      { type:'tiktok', id:'https://www.tiktok.com/@epsilonflightprogram/video/7276878177941884206?lang=en', title:'TikTok #01', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #02', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #03', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #04', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #05', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #06', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #07', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #08', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #09', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #10', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #11', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #12', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #13', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #14', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #15', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #16', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #17', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #18', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #19', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+      { type:'tiktok', id:'', title:'TikTok #20', creator:'@epsilon_ops', date:'', desc:'', tags:['tiktok'] },
+    ];
+
+    const grid = document.getElementById('grid');
+    const q = document.getElementById('q');
+    const filters = document.getElementById('filters');
+
+    let activeType = 'all';
+    let query = '';
+
+    function matches(v){
+      const text = (v.title + ' ' + v.creator + ' ' + (v.tags||[]).join(' ') + ' ' + (v.desc||'')).toLowerCase();
+      const passType = (activeType==='all') || (v.type===activeType);
+      const passQuery = !query || text.includes(query);
+      return passType && passQuery;
+    }
+
+    function youTubeThumb(id){ return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : placeholderThumb('YouTube'); }
+    function tiktokThumb(id){ return id ? placeholderTT() : placeholderThumb('TikTok'); }
+    function placeholderThumb(label){
+      return `data:image/svg+xml;utf8,${encodeURIComponent(`
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 675'>
+          <defs><linearGradient id='g' x1='0' x2='1'><stop stop-color='${getComputedStyle(document.documentElement).getPropertyValue('--eps-700').trim()}'/><stop offset='1' stop-color='${getComputedStyle(document.documentElement).getPropertyValue('--eps-300').trim()}'/></linearGradient></defs>
+          <rect width='1200' height='675' fill='url(%23g)'/>
+          <text x='50%' y='52%' font-family='Arial' font-size='120' font-weight='900' text-anchor='middle' fill='white'>${label}</text>
+          <text x='50%' y='62%' font-family='Arial' font-size='44' font-weight='700' text-anchor='middle' fill='white'>Add Video ID</text>
+        </svg>`)}`
+    }
+    function placeholderTT(){
+      return `data:image/svg+xml;utf8,${encodeURIComponent(`
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 1600'>
+          <defs><linearGradient id='g' x1='0' x2='1'><stop stop-color='${getComputedStyle(document.documentElement).getPropertyValue('--eps-700').trim()}'/><stop offset='1' stop-color='${getComputedStyle(document.documentElement).getPropertyValue('--eps-300').trim()}'/></linearGradient></defs>
+          <rect width='900' height='1600' fill='url(%23g)'/>
+          <text x='50%' y='50%' font-family='Arial' font-size='120' font-weight='900' text-anchor='middle' fill='white'>TikTok</text>
+          <text x='50%' y='60%' font-family='Arial' font-size='44' font-weight='700' text-anchor='middle' fill='white'>Add Video ID</text>
+        </svg>`)}`
+    }
+
+    function cardHTML(v){
+      const isYT = v.type === 'youtube';
+      const thumb = isYT ? youTubeThumb(v.id) : tiktokThumb(v.id);
+      const clsThumb = `thumb ${isYT ? '' : 'vertical'}`;
+      const clsCard = `card ${isYT ? 'wide' : 'tall'}`;
+      const badge = isYT ? 'YouTube' : 'TikTok';
+      const safeTitle = (v.title||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      const tagHTML = (v.tags||[]).map(t=>`<span class="tag">#${t}</span>`).join('');
+      const disabled = !v.id ? 'disabled' : '';
+      const desc = v.desc ? `<div class="desc">${v.desc}</div>` : '';
+      return `
+        <article class="${clsCard}" data-type="${v.type}" data-id="${v.id||''}">
+          <div class="${clsThumb}">
+            <img src="${thumb}" alt="${safeTitle}" loading="lazy"/>
+            <span class="badge">${badge}</span>
+            <button class="play" ${disabled} onclick='openPlayer(${JSON.stringify(v)})'>▶ Play</button>
+          </div>
+          <div class="meta">
+            <h3>${safeTitle}</h3>
+            <div class="by">${v.creator||''} ${v.date?`• <time datetime="${v.date}">${v.date}</time>`:''}</div>
+            ${desc}
+            <div class="tags">${tagHTML}</div>
+          </div>
+        </article>`;
+    }
+
+    function render(){
+      const items = VIDEOS.filter(matches).sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+      grid.innerHTML = items.map(cardHTML).join('');
+    }
+
+    q.addEventListener('input', ()=>{ query = q.value.trim().toLowerCase(); render(); });
+    filters.addEventListener('click', (e)=>{
+      const chip = e.target.closest('.chip'); if(!chip) return;
+      [...filters.querySelectorAll('.chip')].forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      activeType = chip.dataset.type; render();
+    });
+
+    const dlg = document.getElementById('player');
+    const wrap = document.getElementById('frameWrap');
+    function ytEmbed(id){ return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&modestbranding=1&rel=0`; }
+    function tkEmbed(id){ return `https://www.tiktok.com/embed/v2/${id}`; }
+    window.openPlayer = function(v){ if(!v.id) return; wrap.className = 'frame-wrap ' + (v.type==='tiktok' ? 'vertical' : ''); const src = v.type==='youtube' ? ytEmbed(v.id) : tkEmbed(v.id); wrap.innerHTML = `<iframe class="frame" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen src="${src}"></iframe>`; dlg.showModal(); }
+    function closePlayer(){ wrap.innerHTML=''; dlg.close(); }
+    window.closePlayer = closePlayer;
+    dlg.addEventListener('click', (e)=>{ const r = dlg.getBoundingClientRect(); if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom){ closePlayer(); }});
+
+    render();
+  </script>
+</body>
+</html>

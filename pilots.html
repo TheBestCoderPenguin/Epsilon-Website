@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Epsilon Program • Meet the Pilots</title>
+  <style>
+    :root{
+      --eps-900:#0b2f52; --eps-700:#134b8a; --eps-500:#1e79ff; --eps-300:#70b7ff;
+      --ink:#0b1620; --ink-2:#2a3442; --card:#ffffffee; --ring:rgba(30,121,255,.25);
+      --pop:0 12px 40px -10px rgba(30,121,255,.45); --pop-2:0 8px 28px -8px rgba(0,0,0,.28);
+      --radius:18px; --paper:#f7fbff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial; color:var(--ink); background: radial-gradient(80% 60% at 10% -10%, #e9f3ff, transparent 60%), radial-gradient(60% 50% at 110% 10%, #dff0ff, transparent 60%), var(--paper);}    
+    .wrap{max-width:1100px; margin:0 auto; padding:24px}
+    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:8px 0 6px }
+    .title{ margin:0; font-weight:900; font-size: clamp(1.6rem, 2.2vw + .8rem, 2.6rem); background: linear-gradient(90deg, var(--eps-700), var(--eps-300)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .back{ text-decoration:none; font-weight:800; padding:10px 14px; border-radius:999px; background:#fff; border:1px solid #cfe2ff; color:var(--eps-700); box-shadow:0 2px 0 rgba(19,75,138,.12); }
+    .back:hover{ box-shadow: var(--pop) }
+
+    .intro{ background:var(--card); border:1px solid rgba(0,0,0,.06); border-radius: var(--radius); padding:16px 18px; box-shadow: var(--pop-2); }
+
+    .grid{ display:grid; grid-template-columns: repeat(12, 1fr); gap:16px; margin:18px 0 40px }
+    @media (max-width:1000px){ .grid{ grid-template-columns: repeat(8, 1fr) }}
+    @media (max-width:680px){ .grid{ grid-template-columns: repeat(4, 1fr) }}
+
+    .card{ grid-column: span 6; background:var(--card); border:1px solid rgba(0,0,0,.06); border-radius: var(--radius); overflow:hidden; box-shadow: var(--pop-2); transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; position:relative }
+    .card:hover{ transform: translateY(-4px) rotate(.2deg) scale(1.01); box-shadow: var(--pop); border-color: var(--ring); }
+    @media (max-width:680px){ .card{ grid-column: span 4 } }
+
+    .row{ display:grid; grid-template-columns: 140px 1fr; gap:14px; padding:14px }
+    @media (max-width:520px){ .row{ grid-template-columns: 1fr } }
+
+    .avatar{ width:140px; height:140px; border-radius:16px; object-fit:cover; background:#eaf3ff; border:1px solid #d8e7ff }
+    .meta h3{ margin:0 0 4px; font-size:1.2rem; font-weight:900; color:#0f2544 }
+    .meta .sub{ color:#2a3b55; font-weight:700; font-size:.95rem }
+    .meta p{ margin:.6rem 0 0; color:#2a3b55 }
+
+    .pillbar{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px }
+    .pill{ font-size:12px; font-weight:800; color:var(--eps-700); background:#eef5ff; border:1px solid #dbe9ff; padding:6px 10px; border-radius:999px; box-shadow:0 2px 0 rgba(19,75,138,.12) }
+    .pill-role{ background:linear-gradient(90deg, var(--eps-500), var(--eps-300)); color:#fff; border-color:transparent }
+
+    .links{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px }
+    .btn{ text-decoration:none; font-weight:800; padding:8px 12px; border-radius:10px; border:1px solid #cfe2ff; background:#fff; color:var(--eps-700) }
+    .btn:hover{ box-shadow:0 8px 24px rgba(0,0,0,.18) }
+
+    footer{ color:#6b7a90; padding:0 0 40px; text-align:center; font-weight:700 }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="title">Meet the Pilots</h1>
+      <a class="back" href="index.html">← Back to Videos</a>
+    </header>
+
+    <section class="intro">
+      <strong>Who flies the Epsilon skies?</strong>
+      <p>From precision aerobatics to cinematic pursuit shots, this crew keeps Epsilon in the air and on your screen.</p>
+    </section>
+
+    <h2>Pilots</h2>
+    <section class="grid" id="roster"></section>
+
+    <h2>Stunt Pilots</h2>
+    <section class="grid" id="stunts"></section>
+
+    <footer>Easy to edit: just update the <code>PILOTS</code> and <code>STUNTS</code> arrays.</footer>
+  </div>
+
+  <script>
+    const PILOTS = [
+      { name:'Tonan', role:'Owner • Formation Pilot • Trainer • Stunting God', aircraft:['Molotok','Mallard'], bio:'Owner and lead architect of the Epsilon skies. Precision meets showtime.', avatar:'assets/pilots/tonan.jpg', links:[['YouTube','#'],['TikTok','#']] },
+      { name:'Penguin', role:'Co‑Owner • Lead Formation • Camera', aircraft:['Molotok','Nimbus'], bio:'Leads the stack and frames the money shots in Epsilon blue.', avatar:'assets/pilots/penguin.jpg', links:[['TikTok','#']] },
+      { name:'Sterben', role:'Formation Pilot', aircraft:['Molotok'], bio:'haha', avatar:'assets/pilots/sterben.jpg', links:[['YouTube','#']] },
+      { name:'F1r3', role:'Pilot • Sometimes Stunter • Wheelman', aircraft:['Molotok'], bio:'Flight team pilot with a heavy right foot — mostly driving cars when not in the sky.', avatar:'assets/pilots/f1r3.jpg', links:[['TikTok','#']] },
+      { name:'Mammal', role:'Formation Pilot • Newest Member', aircraft:['Molotok','Raiju'], bio:'Newest addition to the flight team — crisp lines and calm comms.', avatar:'assets/pilots/mammal.jpg', links:[['YouTube','#']] },
+    ];
+
+    const STUNTS = [
+      { name:'N/A', role:'N/A', aircraft:['N/A'], bio:'N/A', avatar:'', links:[] },
+      { name:'N/A', role:'N/A', aircraft:['N/A'], bio:'N/A', avatar:'', links:[] },
+      { name:'N/A', role:'N/A', aircraft:['N/A'], bio:'N/A', avatar:'', links:[] },
+    ];
+
+    function card(p){
+      const roleBadges = (p.role||'').split('•').map(s=>s.trim()).filter(Boolean).map(s=>`<span class="pill pill-role">${s}</span>`).join('');
+      const aircraft = (p.aircraft||[]).map(a=>`<span class="pill">${a}</span>`).join('');
+      const links = (p.links||[]).map(([label,url])=>`<a class="btn" href="${url}">${label}</a>`).join('');
+      const avatarFallback = 'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#eaf3ff"/><text x="50%" y="54%" font-size="40" font-weight="800" font-family="Arial" text-anchor="middle" fill="#134b8a">IMG</text></svg>`);
+      return `
+        <article class="card">
+          <div class="row">
+            <img class="avatar" src="${p.avatar||''}" alt="${p.name}" onerror="this.src='${avatarFallback}'" />
+            <div class="meta">
+              <h3>${p.name}</h3>
+              <div class="sub">${p.role}</div>
+              <div class="pillbar">${roleBadges}</div>
+              <div class="pillbar">${aircraft}</div>
+              <p>${p.bio||''}</p>
+              <div class="links">${links}</div>
+            </div>
+          </div>
+        </article>`
+    }
+
+    function render(){
+      document.getElementById('roster').innerHTML = PILOTS.map(card).join('');
+      document.getElementById('stunts').innerHTML = STUNTS.map(card).join('');
+    }
+    render();
+  </script>
+</body>
+</html>
