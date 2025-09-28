@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>EFP Formation Demo</title>
+<style>
+  :root{
+    --sky:#9fd3ff;
+    --sky2:#e9f6ff;
+    --bridge:#2b3a4a;
+    --cloud:#ffffff;
+  }
+  html,body{height:100%;margin:0}
+  body{background:linear-gradient(#aee1ff,#e9f6ff 55%); overflow:hidden; font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+  .stage{position:relative; width:100vw; height:100vh; overflow:hidden;}
+  /* Clouds */
+  .cloud{position:absolute; top:10vh; width:20vmin; height:12vmin; background:var(--cloud);
+    border-radius:10vmin; filter:blur(1px) drop-shadow(0 2px 4px rgba(0,0,0,.08)); opacity:.9}
+  .cloud:before,.cloud:after{content:""; position:absolute; background:var(--cloud); border-radius:50%;}
+  .cloud:before{width:14vmin; height:14vmin; left:-4vmin; top:-2vmin}
+  .cloud:after{width:16vmin; height:10vmin; right:-5vmin; top:1vmin}
+  @keyframes driftL { from{ transform:translateX(110vw) } to{ transform:translateX(-120vw) } }
+  @keyframes driftR { from{ transform:translateX(-120vw) } to{ transform:translateX(110vw) } }
+  .c1{ top:12vh; animation:driftL 60s linear infinite;}
+  .c2{ top:20vh; animation:driftR 80s linear infinite; opacity:.8}
+  .c3{ top:28vh; animation:driftL 70s linear infinite; opacity:.85}
+  .c4{ top:8vh;  animation:driftR 95s linear infinite; opacity:.8}
+  /* Bridge (SVG fills width) */
+  .bridge{position:absolute; left:0; right:0; top:38vh; height:24vh; pointer-events:none; opacity:.95}
+  /* Planes */
+  .plane{position:absolute; font-size:5vmin; transform:translate(-50%,-50%) rotate(0deg); will-change:transform;}
+  .label{position:absolute; left:1rem; bottom:1rem; font-size:.9rem; color:#123; opacity:.6}
+  /* Overlay vignette for depth */
+  .vignette{pointer-events:none; position:absolute; inset:0; box-shadow:inset 0 0 250px rgba(0,0,0,.18)}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <!-- Clouds -->
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+  <div class="cloud c4"></div>
+
+  <!-- Bridge -->
+  <svg class="bridge" viewBox="0 0 1600 400" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#2b3a4a"/>
+        <stop offset="1" stop-color="#1f2a36"/>
+      </linearGradient>
+    </defs>
+    <!-- deck -->
+    <rect x="0" y="240" width="1600" height="18" fill="url(#bg)"/>
+    <!-- piers -->
+    <rect x="240" y="240" width="20" height="120" fill="url(#bg)"/>
+    <rect x="1360" y="240" width="20" height="120" fill="url(#bg)"/>
+    <!-- towers -->
+    <rect x="400" y="80" width="24" height="160" fill="url(#bg)"/>
+    <rect x="1200" y="80" width="24" height="160" fill="url(#bg)"/>
+    <!-- cables -->
+    <path d="M0,240 C400,40 1200,40 1600,240" fill="none" stroke="url(#bg)" stroke-width="6"/>
+    <path d="M0,240 C400,120 1200,120 1600,240" fill="none" stroke="url(#bg)" stroke-width="4" opacity=".75"/>
+  </svg>
+
+  <!-- Smoke canvas (under planes) -->
+  <canvas id="smoke"></canvas>
+
+  <!-- Planes -->
+  <div class="plane" id="A" aria-label="Leader">🛩️</div>
+  <div class="plane" id="B">🛩️</div>
+  <div class="plane" id="C">🛩️</div>
+  <div class="plane" id="D">🛩️</div>
+  <div class="plane" id="E">🛩️</div>
+
+  <div class="vignette"></div>
+  <div class="label">EFP Formation • V → Vixen → Swap sweep → Fly-away → X → O → Hearts</div>
+</div>
+
+<script>
+/* ===== Utility ===== */
+const stage = document.getElementById('stage');
+const smoke = document.getElementById('smoke');
+const ctx = smoke.getContext('2d');
+let W = stage.clientWidth, H = stage.clientHeight;
+function resize(){
+  W = stage.clientWidth; H = stage.clientHeight;
+  smoke.width = W; smoke.height = H;
+}
+window.addEventListener('resize', resize); resize();
+
+function lerp(a,b,t){ return a + (b-a)*t; }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function easeInOut(t){ return (t<.5)? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; }
+function dist(ax,ay,bx,by){ const dx=bx-ax, dy=by-ay; return Math.hypot(dx,dy); }
+function angle(ax,ay,bx,by){ return Math.atan2(by-ay, bx-ax); } // radians
+
+/* ===== Plane setup ===== */
+const planes = {
+  A:{ el:document.getElementById('A'), color:'rgba(255,255,255,0.9)', trailOn:true, scale:1 },
+  B:{ el:document.getElementById('B'), color:'rgba(60,120,255,0.9)', trailOn:true, scale:1 },
+  C:{ el:document.getElementById('C'), color:'rgba(60,120,255,0.9)', trailOn:true, scale:1 },
+  D:{ el:document.getElementById('D'), color:'rgba(10,60,160,0.9)', trailOn:true, scale:1 },
+  E:{ el:document.getElementById('E'), color:'rgba(10,60,160,0.9)', trailOn:true, scale:1 },
+};
+Object.values(planes).forEach(p=>{ p.x=W/2; p.y=H*0.9; p.h= -Math.PI/2; p.lastx=p.x; p.lasty=p.y; p.scale=1; });
+
+/* ===== Formation helpers ===== */
+function veePositions(centerX, centerY, spacing){
+  // Returns offsets for [A,B,C,D,E] = leader, inner L/R, outer L/R
+  return [
+    [0,0],                 // A
+    [-spacing,  spacing*0.8], // B left-inner
+    [ spacing,  spacing*0.8], // C right-inner
+    [-spacing*2, spacing*1.6],// D left-outer
+    [ spacing*2, spacing*1.6] // E right-outer
+  ].map(([ox,oy]) => [centerX+ox, centerY+oy]);
+}
+function applyPositions(posArr, ids=['A','B','C','D','E']){
+  ids.forEach((id,i)=>{ planes[id].tx = posArr[i][0]; planes[id].ty = posArr[i][1]; });
+}
+function faceToTravel(p){
+  const dx = p.x - p.lastx, dy = p.y - p.lasty;
+  if (Math.hypot(dx,dy) > 0.01){ p.h = Math.atan2(dy, dx); }
+}
+
+/* ===== Timeline system ===== */
+const segments = [];
+function segment(duration, update, setup){
+  // duration in seconds, update(t 0..1), optional setup()
+  segments.push({d:duration, u:update, s:setup});
+}
+let totalTime = 0;
+
+/* ====== SEQUENCE ====== */
+
+/* 1) Inbound V toward bridge */
+segment(3.0, (t)=>{
+  const T = easeInOut(t);
+  const startCY = H*0.92, endCY = H*0.55;
+  const cx = W*0.5, cy = lerp(startCY, endCY, T);
+  const pos = veePositions(cx, cy, Math.min(W,H)*0.07);
+  applyPositions(pos);
+});
+
+/* 2) VIXEN break (A up, B/C 45°, D/E 90° out) */
+segment(2.0, (t, once)=>{
+  const T = easeInOut(t);
+  // starting from last V center near bridge
+  const baseCY = H*0.55;
+  const cx = W*0.5;
+  const sp = Math.min(W,H)*0.07;
+  const [Apos,Bpos,Cpos,Dpos,Epos] = veePositions(cx, baseCY, sp);
+
+  planes.A.tx = Apos[0]; planes.A.ty = lerp(Apos[1], H*0.18, T);               // straight up
+  planes.B.tx = lerp(Bpos[0], W*0.32, T); planes.B.ty = lerp(Bpos[1], H*0.25, T); // 45° up-left
+  planes.C.tx = lerp(Cpos[0], W*0.68, T); planes.C.ty = lerp(Cpos[1], H*0.25, T); // 45° up-right
+  planes.D.tx = lerp(Dpos[0], W*0.18, T); planes.D.ty = lerp(Dpos[1], baseCY, T); // 90° left
+  planes.E.tx = lerp(Epos[0], W*0.82, T); planes.E.ty = lerp(Epos[1], baseCY, T); // 90° right
+});
+
+/* 3) Regroup into V left of bridge */
+segment(2.0, (t)=>{
+  const T = easeInOut(t);
+  const pos = veePositions(lerp(W*0.6, W*0.35, T), lerp(H*0.50, H*0.48, T), Math.min(W,H)*0.075);
+  applyPositions(pos);
+});
+
+/* 4) Sweep across bridge while outer pair swap back-and-forth */
+segment(3.2, (t)=>{
+  const base = easeInOut(t);
+  const cx = lerp(W*0.35, W*0.65, base);
+  const cy = H*0.48;
+  const spacing = Math.min(W,H)*0.075;
+  const pos = veePositions(cx, cy, spacing);
+  applyPositions(pos);
+  // swap D & E relative offsets sinusoidally while moving
+  const swap = Math.sin(t*8*Math.PI); // multiple swaps
+  const swapOffset = spacing*1.2*swap;
+  planes.D.tx += swapOffset;
+  planes.E.tx -= swapOffset;
+});
+
+/* 5) Regroup/stabilize on right */
+segment(1.5, (t)=>{
+  const T = easeInOut(t);
+  const pos = veePositions(W*0.70, H*0.48, Math.min(W,H)*0.075);
+  applyPositions(pos);
+});
+
+/* 6) Fly toward foreground and up the page (scale down as if away) */
+segment(3.0, (t)=>{
+  const T = easeInOut(t);
+  const start = veePositions(W*0.70, H*0.48, Math.min(W,H)*0.075);
+  const end   = veePositions(W*0.50, H*0.18, Math.min(W,H)*0.05);
+  ['A','B','C','D','E'].forEach((id,i)=>{
+    planes[id].tx = lerp(start[i][0], end[i][0], T);
+    planes[id].ty = lerp(start[i][1], end[i][1], T);
+    planes[id].scale = lerp(1, 0.7, T);
+  });
+});
+
+/* 7) Break into X */
+segment(2.0, (t)=>{
+  const T = easeInOut(t);
+  const cx=W*0.5, cy=H*0.30, r = Math.min(W,H)*0.10;
+  // target X endpoints around center
+  const targets = {
+    A:[cx, cy],                          // center
+    B:[cx-r, cy-r],  // up-left
+    C:[cx+r, cy-r],  // up-right
+    D:[cx-r, cy+r],  // down-left
+    E:[cx+r, cy+r]   // down-right
+  };
+  for(const id of ['A','B','C','D','E']){
+    planes[id].tx = lerp(planes[id].x, targets[id][0], T);
+    planes[id].ty = lerp(planes[id].y, targets[id][1], T);
+  }
+});
+
+/* 8) Make an O (all fly a circle path to draw smoke ring) */
+segment(4.0, (t)=>{
+  const cx=W*0.5, cy=H*0.32, R=Math.min(W,H)*0.12;
+  const base = t*2*Math.PI; // one revolution
+  const offsets = { A:0, B:0.2, C:0.4, D:0.6, E:0.8 }; // spread around circle
+  for(const [id, off] of Object.entries(offsets)){
+    const th = base + off*2*Math.PI;
+    planes[id].tx = cx + Math.cos(th)*R;
+    planes[id].ty = cy + Math.sin(th)*R;
+  }
+});
+
+/* 9) Regroup at bottom of the O (lower point) into V */
+segment(2.0, (t)=>{
+  const T = easeInOut(t);
+  const pos = veePositions(W*0.5, lerp(H*0.38, H*0.56, T), Math.min(W,H)*0.085);
+  applyPositions(pos);
+  // reset scale toward normal
+  for(const id of ['A','B','C','D','E']) planes[id].scale = lerp(0.9,1,T);
+});
+
+/* 10) Finale: hearts — two planes draw a heart on left, two draw on right; leader hovers */
+segment(6.0, (t)=>{
+  // Leader A holds at center-bottom with smoke off
+  planes.A.trailOn = false;
+  planes.A.tx = W*0.5; planes.A.ty = H*0.72; planes.A.scale = 1;
+
+  // Heart helper (half-curves)
+  function heartPoint(side, u, cx, cy, s){
+    // Parametric heart (full), but we'll map halves per plane
+    const th = u * Math.PI; // 0..π half
+    const x = 16*Math.pow(Math.sin(th),3);
+    const y = 13*Math.cos(th)-5*Math.cos(2*th)-2*Math.cos(3*th)-Math.cos(4*th);
+    const X = cx + (side==='L'?-1:1) * x*s;
+    const Y = cy - y*s;
+    return [X,Y];
+  }
+  // Left heart center & Right heart center
+  const s = Math.min(W,H)*0.01;
+  const Lc=[W*0.30, H*0.62], Rc=[W*0.70, H*0.62];
+
+  // B & D draw left heart (each a half, mirrored timing)
+  const u = clamp(t,0,1); // 0..1 first half of segment draw; second half retrace to top
+  const u2 = clamp((t-3)/3,0,1); // optional fade/settle
+
+  // Left: B = left half (th 0..π), D = right half reversed (π..0)
+  const [Bx,By] = heartPoint('L', u, Lc[0], Lc[1], s*2.2);
+  const [Dx,Dy] = heartPoint('L', 1-u, Lc[0], Lc[1], s*2.2);
+
+  // Right: C & E similar on right side
+  const [Cx,Cy] = heartPoint('R', u, Rc[0], Rc[1], s*2.2);
+  const [Ex,Ey] = heartPoint('R', 1-u, Rc[0], Rc[1], s*2.2);
+
+  Object.assign(planes.B, {tx:Bx, ty:By});
+  Object.assign(planes.D, {tx:Dx, ty:Dy});
+  Object.assign(planes.C, {tx:Cx, ty:Cy});
+  Object.assign(planes.E, {tx:Ex, ty:Ey});
+
+  // Ensure smoke on for drawing hearts
+  planes.B.trailOn = true; planes.C.trailOn = true; planes.D.trailOn = true; planes.E.trailOn = true;
+});
+
+/* ===== Animator ===== */
+let segIndex = 0, segElapsed = 0;
+let lastTS = performance.now();
+
+function step(now){
+  const dt = (now - lastTS)/1000; lastTS = now;
+  if (segIndex >= segments.length){ // loop the show
+    segIndex = 0; segElapsed = 0;
+    // clear smoke between loops
+    ctx.clearRect(0,0,W,H);
+    // reset trail toggles
+    planes.A.trailOn = true;
+  }
+  const seg = segments[segIndex];
+  segElapsed += dt;
+  const t = clamp(segElapsed / seg.d, 0, 1);
+  if (seg.s && !seg._inited){ seg.s(); seg._inited = true; }
+  seg.u(t);
+
+  // Integrate motion toward targets; simple critically damped-ish follow
+  const follow = 9; // higher = snappier
+  for(const p of Object.values(planes)){
+    p.lastx = p.x ?? p.tx ?? W/2;
+    p.lasty = p.y ?? p.ty ?? H*0.9;
+    p.x = (p.x ?? p.tx) + (p.tx - (p.x ?? p.tx)) * clamp(follow*dt,0,1);
+    p.y = (p.y ?? p.ty) + (p.ty - (p.y ?? p.ty)) * clamp(follow*dt,0,1);
+    faceToTravel(p);
+  }
+
+  // Smoke trails
+  ctx.globalCompositeOperation = 'source-over';
+  // fade previous trails slightly for a continuous tail
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.fillRect(0,0,W,H);
+  // draw each plane's stroke
+  for(const p of Object.values(planes)){
+    if (!p.trailOn) continue;
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = Math.max(2, Math.min(W,H)*0.006 * (p.scale ?? 1));
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(p.lastx, p.lasty);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  }
+
+  // Render planes
+  for(const p of Object.values(planes)){
+    const deg = (p.h*180/Math.PI)+90; // emoji faces up by default, rotate to travel
+    const s = p.scale ?? 1;
+    p.el.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%,-50%) rotate(${deg}deg) scale(${s})`;
+  }
+
+  if (t >= 1){
+    segIndex++; segElapsed = 0;
+  }
+  requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+</script>
+</body>
+</html>
