@@ -87,6 +87,10 @@
     .grid-youtube{grid-template-columns:repeat(2, minmax(0, 1fr))}
     @media (max-width:700px){ .grid-youtube{grid-template-columns:1fr} }
 
+    /* >>> NEW: TikTok grid = exactly 2 per row (kept everything else the same) */
+    #gridTikTok{ grid-template-columns:repeat(2, minmax(0, 1fr)) }
+    @media (max-width:700px){ #gridTikTok{ grid-template-columns:1fr } }
+
     footer{color:#6b7a90;padding:28px 0 40px;text-align:center;font-weight:700}
 
     /* Plane */
@@ -149,24 +153,7 @@
         likes:null,
         comments:null
       },
-      {
-        id:'',
-        title:'TikTok Placeholder',
-        desc:'Add your description here.',
-        caption:'',
-        hashtags:[],
-        likes:null,
-        comments:null
-      },
-      {
-        id:'',
-        title:'TikTok Placeholder',
-        desc:'Add your description here.',
-        caption:'',
-        hashtags:[],
-        likes:null,
-        comments:null
-      },
+ 
     ];
 
     const YOUTUBE_VIDEOS = [
@@ -175,8 +162,8 @@
 
     function fmtNum(n){
       if(n==null) return '';
-      if(n >= 1e6) return (n/1e6).toFixed(1).replace(/\\.0$/,'') + 'M';
-      if(n >= 1e3) return (n/1e3).toFixed(1).replace(/\\.0$/,'') + 'K';
+      if(n >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'') + 'M';
+      if(n >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'') + 'K';
       return ''+n;
     }
 
