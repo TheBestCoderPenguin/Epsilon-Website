@@ -3,12 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Formation Lines — Heart → 🙂 → 🙁 → ○</title>
+<title>Formation Lines — Smooth Show</title>
 <style>
-  :root{
-    --sky1:#aee1ff; --sky2:#eaf6ff;
-    --cloud:#fff;
-  }
+  :root{ --sky1:#aee1ff; --sky2:#eaf6ff; --cloud:#fff; }
   html,body{height:100%;margin:0}
   body{background:linear-gradient(var(--sky1),var(--sky2) 60%);overflow:hidden;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
   .stage{position:relative;width:100vw;height:100vh}
@@ -20,260 +17,306 @@
   @keyframes driftL{from{transform:translateX(110vw)}to{transform:translateX(-120vw)}}
   @keyframes driftR{from{transform:translateX(-120vw)}to{transform:translateX(110vw)}}
   .c{height:12vmin;width:22vmin}
-  .c1{top:10vh;animation:driftL 70s linear infinite}
-  .c2{top:18vh;animation:driftR 90s linear infinite;opacity:.9}
-  .c3{top:26vh;animation:driftL 80s linear infinite;opacity:.88}
-  .c4{top:34vh;animation:driftR 95s linear infinite;opacity:.86}
-  .c5{top:14vh;animation:driftL 85s linear infinite;opacity:.9}
-  .c6{top:22vh;animation:driftR 75s linear infinite;opacity:.9}
+  .c1{top:10vh;animation:driftL 80s linear infinite}
+  .c2{top:16vh;animation:driftR 95s linear infinite;opacity:.9}
+  .c3{top:22vh;animation:driftL 90s linear infinite;opacity:.88}
+  .c4{top:28vh;animation:driftR 100s linear infinite;opacity:.86}
+  .c5{top:12vh;animation:driftL 105s linear infinite;opacity:.9}
+  .c6{top:20vh;animation:driftR 88s linear infinite;opacity:.9}
+  .c7{top:30vh;animation:driftL 110s linear infinite;opacity:.85}
   /* Planes */
   .plane{position:absolute;transform:translate(-50%,-50%);font-size:6vmin;will-change:transform}
-  /* Subtle vignette */
   .v{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 240px rgba(0,0,0,.18)}
-  .hud{position:absolute;left:1rem;bottom:1rem;font-size:.95rem;color:#124;opacity:.6}
+  .hud{position:absolute;left:1rem;bottom:1rem;font-size:.95rem;color:#124;opacity:.7;white-space:pre-line}
 </style>
 </head>
 <body>
 <div class="stage" id="stage">
-  <!-- clouds (more, but not too many) -->
+  <!-- Clouds -->
   <div class="cloud c c1" style="left:-30vmin"></div>
   <div class="cloud c c2" style="left:-20vmin"></div>
   <div class="cloud c c3" style="left:-40vmin"></div>
   <div class="cloud c c4" style="left:-10vmin"></div>
   <div class="cloud c c5" style="left:-25vmin"></div>
   <div class="cloud c c6" style="left:-35vmin"></div>
+  <div class="cloud c c7" style="left:-15vmin"></div>
 
   <!-- smoke layer -->
   <canvas id="smoke"></canvas>
 
-  <!-- planes (4) -->
+  <!-- planes -->
   <div class="plane" id="A">🛩️</div>
   <div class="plane" id="B">🛩️</div>
   <div class="plane" id="C">🛩️</div>
   <div class="plane" id="D">🛩️</div>
 
   <div class="v"></div>
-  <div class="hud" id="hud">Heart → Smiley → Sad → Big Circle • lines auto-clear between breaks</div>
+  <div class="hud" id="hud"></div>
 </div>
 
 <script>
-/* === base === */
+/* ========== Setup ========== */
 const stage = document.getElementById('stage');
+const hud = document.getElementById('hud');
 const smoke = document.getElementById('smoke');
-const ctx = smoke.getContext('2d');
+const ctx = smoke.getContext('2d', { alpha:true });
 let W=stage.clientWidth, H=stage.clientHeight;
 function resize(){ W=stage.clientWidth; H=stage.clientHeight; smoke.width=W; smoke.height=H; }
 addEventListener('resize', resize); resize();
 
-const blue = 'rgba(40,110,255,0.95)';   // the blue you liked
+const BLUE = 'rgba(40,110,255,0.95)'; // the blue you liked
 const planes = {
-  A:{el:document.getElementById('A'), x:W*.5, y:H*.8, tx:W*.5, ty:H*.8, h:0, lastx:W*.5, lasty:H*.8, scale:1, color:blue},
-  B:{el:document.getElementById('B'), x:W*.48, y:H*.82, tx:W*.48, ty:H*.82, h:0, lastx:W*.48, lasty:H*.82, scale:1, color:blue},
-  C:{el:document.getElementById('C'), x:W*.52, y:H*.82, tx:W*.52, ty:H*.82, h:0, lastx:W*.52, lasty:H*.82, scale:1, color:blue},
-  D:{el:document.getElementById('D'), x:W*.46, y:H*.84, tx:W*.46, ty:H*.84, h:0, lastx:W*.46, lasty:H*.84, scale:1, color:blue},
+  A:{el:document.getElementById('A'), x:W*.5, y:H*.8, h:0, color:BLUE},
+  B:{el:document.getElementById('B'), x:W*.48, y:H*.82, h:0, color:BLUE},
+  C:{el:document.getElementById('C'), x:W*.52, y:H*.82, h:0, color:BLUE},
+  D:{el:document.getElementById('D'), x:W*.46, y:H*.84, h:0, color:BLUE},
 };
 const IDs = ['A','B','C','D'];
 
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function lerp(a,b,t){return a+(b-a)*t}
 function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
-function ang(ax,ay,bx,by){return Math.atan2(by-ay, bx-ax)}
-function faceToTravel(p){ const dx=p.x-p.lastx, dy=p.y-p.lasty; if(dx*dx+dy*dy>1e-4){ p.h = Math.atan2(dy,dx);} }
 
-/* === drawing / smoke === */
-function fadeTrails(alpha=0.06){
-  ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-  ctx.fillRect(0,0,W,H);
-}
+/* trail controls */
+function fadeTrails(a=0.05){ ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillRect(0,0,W,H); }
 function hardClear(){ ctx.clearRect(0,0,W,H); }
 
-/* === helpers === */
-function placeV(cx,cy,sp){
-  const offs=[[0,0],[-sp, sp*.9],[ sp, sp*.9],[-sp*1.8, sp*1.8]];
-  IDs.forEach((id,i)=>{ planes[id].tx=cx+offs[i][0]; planes[id].ty=cy+offs[i][1]; });
-}
-function moveAllToward(dt){
-  const k=9; // follow strength
-  for(const id of IDs){
-    const p=planes[id];
-    p.lastx = p.x; p.lasty = p.y;
-    p.x += (p.tx - p.x) * clamp(k*dt,0,1);
-    p.y += (p.ty - p.y) * clamp(k*dt,0,1);
-    faceToTravel(p);
-  }
-}
-function renderPlanes(){
-  for(const id of IDs){
-    const p=planes[id];
-    // draw smoke line segment
-    ctx.strokeStyle = p.color;
-    ctx.lineWidth = Math.max(2, Math.min(W,H)*0.006);
-    ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(p.lastx,p.lasty); ctx.lineTo(p.x,p.y); ctx.stroke();
-
-    // emoji orientation (add 90° because plane emoji points up)
-    const deg = (p.h*180/Math.PI)+90;
-    p.el.style.transform = `translate(${p.x}px,${p.y}px) translate(-50%,-50%) rotate(${deg}deg) scale(${p.scale})`;
-  }
+/* Rotate emoji to direction of travel */
+function orient(p, px, py, x, y){
+  const dx=x-px, dy=y-py;
+  if (dx*dx+dy*dy>1e-6){ p.h = Math.atan2(dy,dx); }
+  const deg = (p.h*180/Math.PI)+90; // plane emoji points up; add 90°
+  p.el.style.transform = `translate(${x}px,${y}px) translate(-50%,-50%) rotate(${deg}deg)`;
 }
 
-/* === parametric shapes === */
-// Heart (classic)
+/* ========== Path Helpers ========== */
 function heartXY(u, cx, cy, s){
-  // u in [0..1] maps to θ in [0..2π]
   const th = u * Math.PI*2;
   const x = 16*Math.pow(Math.sin(th),3);
   const y = 13*Math.cos(th)-5*Math.cos(2*th)-2*Math.cos(3*th)-Math.cos(4*th);
   return [cx + x*s, cy - y*s];
 }
-// Circle
 function circleXY(u, cx, cy, R){
   const th = u*2*Math.PI;
   return [cx + Math.cos(th)*R, cy + Math.sin(th)*R];
 }
-// Arc (for smiles)
 function arcXY(u, cx, cy, R, startDeg, endDeg){
   const th = (startDeg + (endDeg-startDeg)*u) * Math.PI/180;
   return [cx + Math.cos(th)*R, cy + Math.sin(th)*R];
 }
+function lemniscateXY(u, cx, cy, a){ // ∞ (Bernoulli)
+  const t = u*2*Math.PI + 0.001;
+  const d = 1 + Math.sin(t)*Math.sin(t);
+  const x = (a*Math.cos(t))/d;
+  const y = (a*Math.sin(t)*Math.cos(t))/d;
+  return [cx + x, cy + y];
+}
+function starXY(u, cx, cy, R1, R2, points=5){ // star polygon path
+  const k = points*2;
+  const th = u*2*Math.PI;
+  const i = Math.floor(u*k)%k;
+  const frac = (u*k)%1;
+  const r0 = (i%2===0)?R1:R2;
+  const r1 = (i%2===0)?R2:R1;
+  const a0 = i*(Math.PI/points);
+  const a1 = (i+1)*(Math.PI/points);
+  const x = cx + Math.cos(a0 + (a1-a0)*frac)* (r0 + (r1-r0)*frac);
+  const y = cy + Math.sin(a0 + (a1-a0)*frac)* (r0 + (r1-r0)*frac);
+  return [x,y];
+}
+function zigzagXY(u, cx, cy, w, h, segments=6){
+  // horizontal zigzag across width w, height h
+  const t = u*segments;
+  const i = Math.floor(t);
+  const frac = t - i;
+  const x0 = cx - w/2 + (i/segments)*w;
+  const x1 = cx - w/2 + ((i+1)/segments)*w;
+  const y0 = (i%2===0)? cy - h/2 : cy + h/2;
+  const y1 = (i%2===0)? cy + h/2 : cy - h/2;
+  return [x0 + (x1-x0)*frac, y0 + (y1-y0)*frac];
+}
+function squareXY(u, cx, cy, s){
+  const p = u*4;
+  const i = Math.floor(p);
+  const t = p - i;
+  const half = s/2;
+  if(i===0) return [cx - half + s*t, cy - half];       // top edge L→R
+  if(i===1) return [cx + half, cy - half + s*t];       // right edge T→B
+  if(i===2) return [cx + half - s*t, cy + half];       // bottom edge R→L
+  return [cx - half, cy + half - s*t];                 // left edge B→T
+}
+function triangleXY(u, cx, cy, s){
+  const h = Math.sqrt(3)/2*s;
+  const pts = [
+    [cx, cy - 2*h/3],
+    [cx - s/2, cy + h/3],
+    [cx + s/2, cy + h/3],
+    [cx, cy - 2*h/3]
+  ];
+  const segs = 3;
+  const p = u*segs;
+  const i = Math.floor(p);
+  const t = p - i;
+  const [x0,y0]=pts[i], [x1,y1]=pts[i+1];
+  return [x0 + (x1-x0)*t, y0 + (y1-y0)*t];
+}
 
-/* === timeline segments === */
-const segments=[];
-function seg(dur, setup, update, cleanup){ segments.push({dur,setup,update,cleanup,init:false,t:0}) }
+/* ========== Timeline Engine (exact paths, no stutter) ========== */
+const SHOW = [
+  { name:"Intro V", dur:3.0, wipe:true },
+  { name:"Heart", dur:6.0, wipe:true },
+  { name:"Smiley", dur:6.0, wipe:true },
+  { name:"Frown", dur:6.0, wipe:true },
+  { name:"Big Circle", dur:7.0, wipe:true },
+  { name:"Infinity", dur:7.0, wipe:true },
+  { name:"Star Loop", dur:7.0, wipe:true },
+  { name:"Sine Wave", dur:7.0, wipe:true },
+  { name:"Square", dur:7.0, wipe:true },
+  { name:"Triangle", dur:7.0, wipe:true },
+];
 
-/* Intro: form a neat V mid-sky */
-seg(2.2,
-  ()=>{}, // setup
-  (t)=>{
-    const T=ease(t);
-    placeV(lerp(W*.5,W*.5,T), lerp(H*.85,H*.60,T), Math.min(W,H)*0.07);
-  },
-  ()=>{ hardClear(); } // clear lines before first shape draw
-);
+let segIndex = 0, segStart = performance.now();
 
-/* 1) HEART — all four trace the full heart, phased so it draws fast */
-seg(4.0,
-  ()=>{ /* center of heart */ },
-  (t)=>{
-    const cx=W*.5, cy=H*.48, s=Math.min(W,H)*0.01*2.4;
+/* per-segment path assignment: returns per-plane (x,y) for u in [0,1] */
+function evalSegment(name, u){
+  const P = {};
+  const cx=W*.5, cy=H*.52;
+
+  if(name==="Intro V"){
+    // glide into a V mid-sky
+    const T=ease(u);
+    const sp=Math.min(W,H)*0.08;
+    const offs=[[0,0],[-sp, sp*.9],[ sp, sp*.9],[-sp*1.6, sp*1.6]];
+    offs.forEach(([ox,oy],i)=>{
+      const id=IDs[i];
+      P[id]=[W*.5 + ox, (H*.85)*(1-T) + (H*.58+oy)*T];
+    });
+  }
+
+  if(name==="Heart"){
+    const s = Math.min(W,H)*0.024;
     const phases = {A:0, B:.25, C:.5, D:.75};
-    for(const id of IDs){
-      const u = (t + phases[id]) % 1;
-      const [x,y]=heartXY(u, cx, cy, s);
-      planes[id].tx=x; planes[id].ty=y;
-    }
-  },
-  ()=>{ hardClear(); } // wipe after heart
-);
+    for(const id of IDs){ P[id] = heartXY((u+phases[id])%1, cx, cy, s); }
+  }
 
-/* Regroup center briefly */
-seg(1.2,
-  ()=>{},
-  (t)=>{
-    const T=ease(t);
-    placeV(W*.5, lerp(H*.58,H*.50,T), Math.min(W,H)*0.065);
-  },
-  ()=>{ hardClear(); } // make next face clean too
-);
-
-/* 2) SMILEY — B&C draw eyes (small circles), A&D draw smile arc */
-seg(4.0,
-  ()=>{},
-  (t)=>{
-    // eyes
+  if(name==="Smiley"){
+    // Two planes draw eyes (small circles), two draw a LOWER mouth arc (true smile)
     const eyeR = Math.min(W,H)*0.03;
-    const eyeY = H*0.38, eyeXoff = Math.min(W,H)*0.09;
-    const lc=[W*.5-eyeXoff, eyeY], rc=[W*.5+eyeXoff, eyeY];
+    const eyeY = H*0.40, eyeXoff = Math.min(W,H)*0.09;
+    const L=[cx-eyeXoff, eyeY], R=[cx+eyeXoff, eyeY];
+    const mouthR = Math.min(W,H)*0.18, mc=[cx, H*0.56];
+    const start=200, end=340; // lower arc (smile)
+    P.B = circleXY(u, L[0], L[1], eyeR);
+    P.C = circleXY((u+.5)%1, R[0], R[1], eyeR);
+    P.A = arcXY(u, mc[0], mc[1], mouthR, start, end);
+    P.D = arcXY((u+.5)%1, mc[0], mc[1], mouthR, start, end);
+  }
 
-    // mouth (smile arc)
-    const mouthR = Math.min(W,H)*0.16;
-    const mc=[W*.5, H*0.52];
-    // draw lower arc from 200° to -20° (i.e., 200 → 340)
-    const start=200, end=340;
-
-    // time split: whole 4s looping, so just continuous
-    const [Bx,By]=circleXY(t, lc[0], lc[1], eyeR);
-    const [Cx,Cy]=circleXY((t+.5)%1, rc[0], rc[1], eyeR);
-
-    const [Ax,Ay]=arcXY(t, mc[0], mc[1], mouthR, start, end);
-    const [Dx,Dy]=arcXY((t+.5)%1, mc[0], mc[1], mouthR, start, end);
-
-    Object.assign(planes.B,{tx:Bx,ty:By});
-    Object.assign(planes.C,{tx:Cx,ty:Cy});
-    Object.assign(planes.A,{tx:Ax,ty:Ay});
-    Object.assign(planes.D,{tx:Dx,ty:Dy});
-  },
-  ()=>{ hardClear(); } // wipe after smile
-);
-
-/* 3) SAD FACE — same eyes; mouth arc upside-down */
-seg(4.0,
-  ()=>{},
-  (t)=>{
-    // eyes
+  if(name==="Frown"){
+    // Same eyes; UPPER mouth arc (true frown)
     const eyeR = Math.min(W,H)*0.03;
-    const eyeY = H*0.38, eyeXoff = Math.min(W,H)*0.09;
-    const lc=[W*.5-eyeXoff, eyeY], rc=[W*.5+eyeXoff, eyeY];
+    const eyeY = H*0.40, eyeXoff = Math.min(W,H)*0.09;
+    const L=[cx-eyeXoff, eyeY], R=[cx+eyeXoff, eyeY];
+    const mouthR = Math.min(W,H)*0.18, mc=[cx, H*0.52];
+    const start=160, end=20; // upper arc (frown)
+    P.B = circleXY(u, L[0], L[1], eyeR);
+    P.C = circleXY((u+.5)%1, R[0], R[1], eyeR);
+    P.A = arcXY(u, mc[0], mc[1], mouthR, start, end);
+    P.D = arcXY((u+.5)%1, mc[0], mc[1], mouthR, start, end);
+  }
 
-    // mouth (sad arc) upper arc from 160° to 20°
-    const mouthR = Math.min(W,H)*0.16;
-    const mc=[W*.5, H*0.58];
-    const start=160, end=20;
+  if(name==="Big Circle"){
+    const R = Math.min(W,H)*0.30;
+    const phases={A:0,B:.25,C:.5,D:.75};
+    for(const id of IDs){ P[id]=circleXY((u+phases[id])%1, cx, cy, R); }
+  }
 
-    const [Bx,By]=circleXY(t, lc[0], lc[1], eyeR);
-    const [Cx,Cy]=circleXY((t+.5)%1, rc[0], rc[1], eyeR);
+  if(name==="Infinity"){
+    const a = Math.min(W,H)*0.30;
+    const phases={A:0,B:.25,C:.5,D:.75};
+    for(const id of IDs){ P[id]=lemniscateXY((u+phases[id])%1, cx, cy, a); }
+  }
 
-    const [Ax,Ay]=arcXY(t, mc[0], mc[1], mouthR, start, end);
-    const [Dx,Dy]=arcXY((t+.5)%1, mc[0], mc[1], mouthR, start, end);
+  if(name==="Star Loop"){
+    const R1 = Math.min(W,H)*0.22, R2 = Math.min(W,H)*0.09;
+    const phases={A:0,B:.25,C:.5,D:.75};
+    for(const id of IDs){ P[id]=starXY((u+phases[id])%1, cx, cy, R1, R2, 5); }
+  }
 
-    Object.assign(planes.B,{tx:Bx,ty:By});
-    Object.assign(planes.C,{tx:Cx,ty:Cy});
-    Object.assign(planes.A,{tx:Ax,ty:Ay});
-    Object.assign(planes.D,{tx:Dx,ty:Dy});
-  },
-  ()=>{ hardClear(); } // wipe after sad
-);
-
-/* 4) BIG CIRCLE — all four chase each other on a huge ring */
-seg(5.0,
-  ()=>{},
-  (t)=>{
-    const R = Math.min(W,H)*0.28;
-    const cx=W*.5, cy=H*.50;
+  if(name==="Sine Wave"){
+    // Horizontal zig-zag/sine ribbon across
+    const w = Math.min(W,H)*0.8, h = Math.min(W,H)*0.30;
     const phases={A:0,B:.25,C:.5,D:.75};
     for(const id of IDs){
-      const [x,y]=circleXY((t+phases[id])%1, cx, cy, R);
-      planes[id].tx=x; planes[id].ty=y;
+      const uu = (u+phases[id])%1;
+      const x = cx - w/2 + w*uu;
+      const y = cy + Math.sin(uu*2*Math.PI)*h/2;
+      P[id] = [x,y];
     }
-  },
-  ()=>{ /* final: keep trails or clear — your call */ }
-);
-
-/* === animator === */
-let idx=0, last=performance.now();
-function tick(now){
-  const dt=(now-last)/1000; last=now;
-
-  // segment handling
-  if(idx>=segments.length){ idx=0; } // loop whole show
-  const s=segments[idx];
-  if(!s.init){ s.init=true; s.t=0; if(s.setup) s.setup(); }
-  s.t += dt;
-  const t = clamp(s.t/s.dur,0,1);
-  s.update(t);
-
-  // physics & trails
-  fadeTrails(0.06);       // continuous faint fade for silky tails
-  moveAllToward(dt);
-  renderPlanes();
-
-  if(t>=1){
-    if(s.cleanup) s.cleanup();  // hard clear between breaks when requested
-    idx++; // next
   }
-  requestAnimationFrame(tick);
+
+  if(name==="Square"){
+    const s = Math.min(W,H)*0.50;
+    const phases={A:0,B:.25,C:.5,D:.75};
+    for(const id of IDs){ P[id]=squareXY((u+phases[id])%1, cx, cy, s); }
+  }
+
+  if(name==="Triangle"){
+    const s = Math.min(W,H)*0.60;
+    const phases={A:0,B:.33,C:.66,D:.0};
+    for(const id of IDs){ P[id]=triangleXY((u+phases[id])%1, cx, cy, s); }
+  }
+
+  return P;
 }
-requestAnimationFrame(tick);
+
+/* ========== Render Loop ========== */
+let last = performance.now();
+function frame(now){
+  const seg = SHOW[segIndex];
+  const elapsed = (now - segStart)/1000;
+  const u = clamp(elapsed / seg.dur, 0, 1);
+
+  // Update HUD
+  hud.textContent = `${seg.name}  •  ${(segIndex+1)}/${SHOW.length}\nLines wipe between breaks • Slower, smooth paths`;
+
+  // Evaluate exact positions for this segment
+  const prevPositions = {};
+  for(const id of IDs){ prevPositions[id] = [planes[id].x, planes[id].y]; }
+
+  const P = evalSegment(seg.name, ease(u));
+
+  // Draw trails + planes (exact positions, no chasing)
+  // Slight continuous fade for silky lines
+  fadeTrails(0.04);
+
+  ctx.strokeStyle = BLUE;
+  ctx.lineWidth = Math.max(2, Math.min(W,H)*0.006);
+  ctx.lineCap = 'round';
+
+  for(const id of IDs){
+    const p = planes[id];
+    const [x,y] = P[id] || [p.x, p.y];
+    // trail segment (from previous to new)
+    ctx.beginPath();
+    ctx.moveTo(prevPositions[id][0], prevPositions[id][1]);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    // orient + place emoji
+    orient(p, prevPositions[id][0], prevPositions[id][1], x, y);
+    p.x = x; p.y = y;
+  }
+
+  // Segment transition
+  if (u >= 1){
+    if (seg.wipe) hardClear();       // full wipe between breaks
+    segIndex = (segIndex + 1) % SHOW.length;
+    segStart = now;
+  }
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
 </script>
 </body>
 </html>
